@@ -48,93 +48,29 @@
         </div>
     </div>
 
-    <script>
-        // SDK BAŞLATMA
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+<script>
+    // 1. Önce SDK'yı tanımla ve hazırla
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
 
-        const WORKER_URL = "https://old-cherry-cabc.ahmtbke58.workers.dev"; // Sondaki / işaretini sildim
-        let start, activeTask = null;
+    const WORKER_URL = "https://old-cherry-cabc.ahmtbke58.workers.dev";
+    let start, activeTask = null;
 
-        window.onload = () => {
-            const saved = localStorage.getItem('fp_user');
-            if(saved) loadDashboard(saved);
-        };
+    // 2. Fonksiyonları tanımla
+    function joinGroup() {
+        // Doğrudan Telegram içinden açmayı zorlar
+        tg.openTelegramLink('https://t.me');
+    }
 
-        function saveUser() {
-            const val = document.getElementById('fp_addr').value;
-            if(val) { 
-                localStorage.setItem('fp_user', val); 
-                loadDashboard(val); 
-            }
-        }
+    function doTask(url, id) {
+        start = Date.now();
+        activeTask = id;
+        // try_instant_view: false seçeneği dış tarayıcıya (Chrome/Safari) zorlar
+        tg.openLink(url, { try_instant_view: false });
+    }
 
-        async function loadDashboard(addr) {
-            document.getElementById('setup').style.display = 'none';
-            document.getElementById('main').style.display = 'block';
-            
-            try {
-                const uid = tg.initDataUnsafe.user.id;
-                const res = await fetch(`${WORKER_URL}/status?userId=${uid}`);
-                const data = await res.json();
-                
-                document.getElementById('total_earn').innerText = data.totalToday || 0;
-                if(data.task1) lockBtn('btn_task1');
-                if(data.task2) lockBtn('btn_task2');
-            } catch (e) {
-                console.error("Dashboard hatası:", e);
-            }
-        }
-
-        function lockBtn(id) {
-            const b = document.getElementById(id);
-            if(b) {
-                b.disabled = true; 
-                b.classList.add('completed'); 
-                b.innerText = "Completed";
-            }
-        }
-
-        // GARANTİLİ LİNK AÇMA FONKSİYONLARI
-        function joinGroup() {
-            tg.openTelegramLink('https://t.me/earnfreefaucetwin');
-        }
-
-        function doTask(url, id) {
-            start = Date.now(); 
-            activeTask = id;
-            // try_instant_view: false tarayıcıda açılmasını zorlar
-            tg.openLink(url, { try_instant_view: false });
-        }
-
-        // GERİ DÖNÜŞ KONTROLÜ
-        window.onfocus = async () => {
-            if(activeTask) {
-                const diff = Math.floor((Date.now() - start) / 1000);
-                if(diff >= 15) {
-                    try {
-                        const res = await fetch(`${WORKER_URL}/payout`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                address: localStorage.getItem('fp_user'),
-                                task_id: activeTask,
-                                initData: tg.initData
-                            })
-                        });
-                        const result = await res.json();
-                        tg.showAlert(result.message);
-                        if(result.success) loadDashboard(localStorage.getItem('fp_user'));
-                    } catch (e) {
-                        tg.showAlert("Ödeme isteği sırasında bir hata oluştu.");
-                    }
-                } else {
-                    tg.showAlert("You came back too early! Wait " + (15 - diff) + " more seconds.");
-                }
-                activeTask = null;
-            }
-        };
-    </script>
+    // 3. Diğer fonksiyonlar (saveUser, loadDashboard vb.) aynı kalabilir...
+</script>
 </body>
 </html>
