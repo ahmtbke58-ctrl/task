@@ -1,102 +1,93 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- DOĞRU SDK LİNKİ BURADADIR -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- KRİTİK: Telegram SDK Linki -->
     <script src="https://telegram.org"></script>
+    <title>Instantask Pay</title>
     <style>
-        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; text-align: center; color: #333; }
-        .card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .stats { background: #e3f2fd; color: #0d47a1; font-weight: bold; }
-        button { background: #0088cc; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 14px; }
-        button:disabled { background: #ccc !important; cursor: not-allowed; }
-        .completed { background: #6c757d !important; }
-        input { width: 90%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; padding: 15px; text-align: center; color: #222; }
+        .card { background: white; padding: 15px; border-radius: 15px; border: 1px solid #e0e0e0; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .stats { background: #0088cc; color: white; font-weight: bold; }
+        button { background: #24A1DE; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: 700; font-size: 15px; }
+        button:disabled { background: #bdc3c7 !important; cursor: not-allowed; }
+        input { width: 90%; padding: 12px; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 10px; font-size: 14px; outline: none; }
     </style>
 </head>
 <body>
+
     <div id="setup">
         <div class="card">
-            <h3>FaucetPay Email</h3>
-            <input type="text" id="fp_addr" placeholder="Enter your FaucetPay Email">
-            <button onclick="saveUser()">Save & Start</button>
+            <h3>Welcome!</h3>
+            <p>Enter your FaucetPay Email</p>
+            <input type="text" id="fp_addr" placeholder="example@email.com">
+            <button onclick="saveUser()">START EARNING</button>
         </div>
     </div>
 
     <div id="main" style="display:none;">
         <div class="card stats">
-            Your Daily Earnings: <span id="total_earn">0</span> Satoshi LTC
+            Daily Earnings: <span id="total_earn">0</span> Satoshi LTC
         </div>
 
-        <div class="card" style="background: #24A1DE; color: white; border: none;">
-            <h4 style="margin: 5px;">📢 Join Our Community</h4>
-            <p style="font-size: 12px;">Get new tasks and updates!</p>
-            <button onclick="joinGroup()" style="background: white; color: #24A1DE; font-weight: bold; border-radius: 20px;">JOIN GROUP</button>
+        <div class="card" style="border: 2px solid #24A1DE;">
+            <h4 style="margin: 5px; color: #24A1DE;">📢 Join Community</h4>
+            <button onclick="joinGroup()" style="border-radius: 25px;">JOIN TELEGRAM GROUP</button>
         </div>
 
         <div class="card">
             <h4>Task 1 (100 Satoshi)</h4>
-            <p style="font-size: 12px; color: #666;">internetdefteri.blogspot.com</p>
-            <button id="btn_task1" onclick="doTask('https://internetdefteri.blogspot.com', 'task1')">Visit Task (15s)</button>
+            <button id="btn_task1" onclick="doTask('https://internetdefteri.blogspot.com', 'task1')">VISIT TASK (15s)</button>
         </div>
 
         <div class="card">
             <h4>Task 2 (120 Satoshi)</h4>
-            <p style="font-size: 12px; color: #666;">adreslistele.blogspot.com</p>
-            <button id="btn_task2" onclick="doTask('https://adreslistele.blogspot.com', 'task2')">Visit Task (15s)</button>
+            <button id="btn_task2" onclick="doTask('https://adreslistele.blogspot.com', 'task2')">VISIT TASK (15s)</button>
         </div>
     </div>
 
-<script>
+    <script>
+        // SDK BAŞLATMA
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
-        const WORKER_URL = "https://old-cherry-cabc.ahmtbke58.workers.dev";
-        let startTime, activeTask = null;
+        const WORKER_URL = "https://old-cherry-cabc.ahmtbke58.workers.dev"; 
+        let start, activeTask = null;
 
         window.onload = () => {
             const saved = localStorage.getItem('fp_user');
             if(saved) {
-                // Email zaten varsa direkt ana sayfayı göster, sonra verileri çek
-                showDashboardUI();
+                showDashboard();
                 loadData(saved);
             }
         };
 
         function saveUser() {
             const val = document.getElementById('fp_addr').value.trim();
-            if(val) {
-                localStorage.setItem('fp_user', val);
-                showDashboardUI();
+            if(val) { 
+                localStorage.setItem('fp_user', val); 
+                showDashboard();
                 loadData(val);
             }
         }
 
-        function showDashboardUI() {
+        function showDashboard() {
             document.getElementById('setup').style.display = 'none';
             document.getElementById('main').style.display = 'block';
         }
 
         async function loadData(addr) {
             try {
-                // Kullanıcı ID'sini güvenli bir şekilde al
                 const user = tg.initDataUnsafe?.user;
-                if (!user?.id) {
-                    console.log("Telegram User ID not found. Are you opening from Telegram?");
-                    return;
-                }
-
+                if (!user) return;
                 const res = await fetch(`${WORKER_URL}/status?userId=${user.id}`);
                 const data = await res.json();
-                
                 document.getElementById('total_earn').innerText = data.totalToday || 0;
                 if(data.task1) lockBtn('btn_task1');
                 if(data.task2) lockBtn('btn_task2');
-            } catch (e) {
-                console.error("Data load error:", e);
-            }
+            } catch (e) { console.log("Sync error"); }
         }
 
         function lockBtn(id) {
@@ -104,40 +95,45 @@
             if(b) { b.disabled = true; b.innerText = "COMPLETED"; }
         }
 
+        // --- LİNK AÇMA FONKSİYONLARI ---
+
         function joinGroup() {
+            // Telegram içi (Grup/Kanal) linklerini açmak için:
             tg.openTelegramLink('https://t.me');
         }
 
         function doTask(url, id) {
-            startTime = Date.now();
+            start = Date.now(); 
             activeTask = id;
+            // Dış web sitesi linklerini dış tarayıcıda açmak için:
             tg.openLink(url, { try_instant_view: false });
         }
 
+        // --- GERİ DÖNÜŞ KONTROLÜ ---
         window.onfocus = async () => {
             if(activeTask) {
-                const diff = Math.floor((Date.now() - startTime) / 1000);
+                const diff = Math.floor((Date.now() - start) / 1000);
                 if(diff >= 15) {
-                    const res = await fetch(`${WORKER_URL}/payout`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            address: localStorage.getItem('fp_user'),
-                            task_id: activeTask,
-                            initData: tg.initData
-                        })
-                    });
-                    const result = await res.json();
-                    tg.showAlert(result.message);
-                    if(result.success) loadData(localStorage.getItem('fp_user'));
+                    try {
+                        const res = await fetch(`${WORKER_URL}/payout`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                address: localStorage.getItem('fp_user'),
+                                task_id: activeTask,
+                                initData: tg.initData
+                            })
+                        });
+                        const result = await res.json();
+                        tg.showAlert(result.message);
+                        if(result.success) loadData(localStorage.getItem('fp_user'));
+                    } catch (e) { tg.showAlert("Error processing payout."); }
                 } else {
-                    tg.showAlert("Wait " + (15 - diff) + " more seconds.");
+                    tg.showAlert("Wait " + (15 - diff) + " more seconds!");
                 }
                 activeTask = null;
             }
         };
     </script>
-</body>
-</html>
 </body>
 </html>
