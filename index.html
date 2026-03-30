@@ -55,6 +55,8 @@ function joinGroup() {
 
         
         const tg = window.Telegram.WebApp;
+        tg.ready(); // Telegram'a uygulamanın hazır olduğunu bildir
+
         const WORKER_URL = "https://old-cherry-cabc.ahmtbke58.workers.dev/";
         let start, activeTask = null;
 
