@@ -49,28 +49,95 @@
     </div>
 
 <script>
-    // 1. Önce SDK'yı tanımla ve hazırla
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
 
-    const WORKER_URL = "https://old-cherry-cabc.ahmtbke58.workers.dev";
-    let start, activeTask = null;
+        const WORKER_URL = "https://old-cherry-cabc.ahmtbke58.workers.dev";
+        let startTime, activeTask = null;
 
-    // 2. Fonksiyonları tanımla
-    function joinGroup() {
-        // Doğrudan Telegram içinden açmayı zorlar
-        tg.openTelegramLink('https://t.me');
-    }
+        window.onload = () => {
+            const saved = localStorage.getItem('fp_user');
+            if(saved) {
+                // Email zaten varsa direkt ana sayfayı göster, sonra verileri çek
+                showDashboardUI();
+                loadData(saved);
+            }
+        };
 
-    function doTask(url, id) {
-        start = Date.now();
-        activeTask = id;
-        // try_instant_view: false seçeneği dış tarayıcıya (Chrome/Safari) zorlar
-        tg.openLink(url, { try_instant_view: false });
-    }
+        function saveUser() {
+            const val = document.getElementById('fp_addr').value.trim();
+            if(val) {
+                localStorage.setItem('fp_user', val);
+                showDashboardUI();
+                loadData(val);
+            }
+        }
 
-    // 3. Diğer fonksiyonlar (saveUser, loadDashboard vb.) aynı kalabilir...
-</script>
+        function showDashboardUI() {
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('main').style.display = 'block';
+        }
+
+        async function loadData(addr) {
+            try {
+                // Kullanıcı ID'sini güvenli bir şekilde al
+                const user = tg.initDataUnsafe?.user;
+                if (!user?.id) {
+                    console.log("Telegram User ID not found. Are you opening from Telegram?");
+                    return;
+                }
+
+                const res = await fetch(`${WORKER_URL}/status?userId=${user.id}`);
+                const data = await res.json();
+                
+                document.getElementById('total_earn').innerText = data.totalToday || 0;
+                if(data.task1) lockBtn('btn_task1');
+                if(data.task2) lockBtn('btn_task2');
+            } catch (e) {
+                console.error("Data load error:", e);
+            }
+        }
+
+        function lockBtn(id) {
+            const b = document.getElementById(id);
+            if(b) { b.disabled = true; b.innerText = "COMPLETED"; }
+        }
+
+        function joinGroup() {
+            tg.openTelegramLink('https://t.me');
+        }
+
+        function doTask(url, id) {
+            startTime = Date.now();
+            activeTask = id;
+            tg.openLink(url, { try_instant_view: false });
+        }
+
+        window.onfocus = async () => {
+            if(activeTask) {
+                const diff = Math.floor((Date.now() - startTime) / 1000);
+                if(diff >= 15) {
+                    const res = await fetch(`${WORKER_URL}/payout`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            address: localStorage.getItem('fp_user'),
+                            task_id: activeTask,
+                            initData: tg.initData
+                        })
+                    });
+                    const result = await res.json();
+                    tg.showAlert(result.message);
+                    if(result.success) loadData(localStorage.getItem('fp_user'));
+                } else {
+                    tg.showAlert("Wait " + (15 - diff) + " more seconds.");
+                }
+                activeTask = null;
+            }
+        };
+    </script>
+</body>
+</html>
 </body>
 </html>
