@@ -1,159 +1,144 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- 1. MOBİL KONSOL (ERUDA) - En üste ekliyoruz -->
-    <script src="https://jsdelivr.net"></script>
-    <script>eruda.init();</script>
-    <!-- KRİTİK: Telegram SDK Linki -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org"></script>
-    <title>Instantask Pay</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; padding: 15px; text-align: center; color: #222; }
-        .card { background: white; padding: 15px; border-radius: 15px; border: 1px solid #e0e0e0; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .stats { background: #0088cc; color: white; font-weight: bold; }
-        button { background: #24A1DE; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: 700; font-size: 15px; }
-        button:disabled { background: #bdc3c7 !important; cursor: not-allowed; }
-        input { width: 90%; padding: 12px; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 10px; font-size: 14px; outline: none; }
+        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; text-align: center; margin: 0; }
+        .card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stats { background: #e3f2fd; color: #0d47a1; font-weight: bold; }
+        button { background: #0088cc; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #ccc !important; cursor: not-allowed; }
+        .completed { background: #6c757d !important; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        #main { display: none; }
     </style>
-    <script src="https://unpkg.com"></script>
-
 </head>
 <body>
 
     <div id="setup">
         <div class="card">
-            <h3>Welcome!</h3>
-            <p>Enter your FaucetPay Email</p>
-            <input type="text" id="fp_addr" placeholder="example@email.com">
-            <button onclick="saveUser()">START EARNING</button>
+            <h3>FaucetPay Email</h3>
+            <p style="font-size: 13px; color: #666;">Ödemelerin yatırılacağı e-posta adresini girin.</p>
+            <input type="email" id="fp_addr" placeholder="example@gmail.com">
+            <button onclick="saveUser()">Kaydet ve Başla</button>
         </div>
     </div>
 
-    <div id="main" style="display:none;">
+    <div id="main">
         <div class="card stats">
-            Daily Earnings: <span id="total_earn">0</span> Satoshi LTC
+            Günlük Kazancın: <span id="total_earn">0</span> Satoshi LTC
         </div>
 
-        <div class="card" style="border: 2px solid #24A1DE;">
-            <h4 style="margin: 5px; color: #24A1DE;">📢 Join Community</h4>
-            <button onclick="joinGroup()" style="border-radius: 25px;">JOIN TELEGRAM GROUP</button>
-        </div>
-
-        <div class="card">
-            <h4>Task 1 (100 Satoshi)</h4>
-            <button id="btn_task1" onclick="doTask('https://internetdefteri.blogspot.com', 'task1')">VISIT TASK (15s)</button>
+        <div class="card" style="background: #24A1DE; color: white; border: none;">
+            <h4 style="margin: 5px;">📢 Topluluğumuza Katıl</h4>
+            <p style="font-size: 12px;">Yeni görevler ve güncellemeler için takip et!</p>
+            <button onclick="joinGroup()" style="background: white; color: #24A1DE; border-radius: 20px;">GRUBA KATIL</button>
         </div>
 
         <div class="card">
-            <h4>Task 2 (120 Satoshi)</h4>
-            <button id="btn_task2" onclick="doTask('https://adreslistele.blogspot.com', 'task2')">VISIT TASK (15s)</button>
-        <!-- Yeni Sekmede Açma Bağlantısı -->
-  <div class="mavi-kutu" 
-     style="background-color: #e3f2fd; border-radius: 20px; padding: 20px; display: inline-block;">
-  
-  <!-- Yeni Sekmede Açma Bağlantısı -->
-  <a href="https://adreslistele.blogspot.com/2026/03/faucet-rotator.html" target="_blank">
-    
-    <!-- Görsel: Radius ve el işareti imleci burada -->
-    <img src="https://blogger.googleusercontent.com/img/a/AVvXsEgd3O39GgkoPx4uuEZlwXtXDrjdYfTgP3cyiZZg5vPj65Gv2xU6-7JMn3V03OaRyB5HapigIN5dVq98N--Ljv5jKJ56Qnd2bbl9OHl1D0D6JRADdLVcUu9q56y_S5ynIJf68bAavxGjLZWykHnuUh19x1DPvZUnuv-ryZ3NSddtJsrE1U3O9ys6Otp2dTg=s218" alt="Görsel" 
-  style="border-radius: 12px; width: 100%; max-width: 300px; cursor: pointer; display: block;">
-  
-  </a></div>
+            <h4>Görev 1 (100 Satoshi)</h4>
+            <p style="font-size: 12px; color: #777;">internetdefteri.blogspot.com</p>
+            <button id="btn_task1" onclick="doTask('https://internetdefteri.blogspot.com', 'task1')">Görevi Ziyaret Et (15s)</button>
+        </div>
 
-        
+        <div class="card">
+            <h4>Görev 2 (120 Satoshi)</h4>
+            <p style="font-size: 12px; color: #777;">adreslistele.blogspot.com</p>
+            <button id="btn_task2" onclick="doTask('https://adreslistele.blogspot.com', 'task2')">Görevi Ziyaret Et (15s)</button>
         </div>
     </div>
 
     <script>
-        // SDK BAŞLATMA
         const tg = window.Telegram.WebApp;
         tg.ready();
-        tg.expand();
+        tg.expand(); // Uygulamayı tam ekran yap
 
-        const WORKER_URL = "https://old-cherry-cabc.ahmtbke58.workers.dev"; 
-        let start, activeTask = null;
+        const WORKER_URL = "https://old-cherry-cabc.ahmtbke58.workers.dev";
+        let startTime, activeTaskId = null;
 
         window.onload = () => {
-            const saved = localStorage.getItem('fp_user');
-            if(saved) {
-                showDashboard();
-                loadData(saved);
+            const savedEmail = localStorage.getItem('fp_user');
+            if (savedEmail) {
+                loadDashboard(savedEmail);
             }
         };
 
         function saveUser() {
-            const val = document.getElementById('fp_addr').value.trim();
-            if(val) { 
-                localStorage.setItem('fp_user', val); 
-                showDashboard();
-                loadData(val);
+            const email = document.getElementById('fp_addr').value.trim();
+            if (email && email.includes('@')) {
+                localStorage.setItem('fp_user', email);
+                loadDashboard(email);
+            } else {
+                tg.showAlert("Lütfen geçerli bir FaucetPay e-postası girin.");
             }
         }
 
-        function showDashboard() {
+        async function loadDashboard(email) {
             document.getElementById('setup').style.display = 'none';
             document.getElementById('main').style.display = 'block';
-        }
-
-        async function loadData(addr) {
+            
             try {
-                const user = tg.initDataUnsafe?.user;
-                if (!user) return;
-                const res = await fetch(`${WORKER_URL}/status?userId=${user.id}`);
+                const userId = tg.initDataUnsafe?.user?.id || "test_user";
+                const res = await fetch(`${WORKER_URL}/status?userId=${userId}`);
                 const data = await res.json();
+                
                 document.getElementById('total_earn').innerText = data.totalToday || 0;
-                if(data.task1) lockBtn('btn_task1');
-                if(data.task2) lockBtn('btn_task2');
-            } catch (e) { console.log("Sync error"); }
+                if (data.task1) lockBtn('btn_task1');
+                if (data.task2) lockBtn('btn_task2');
+            } catch (err) {
+                console.error("Dashboard yüklenirken hata:", err);
+            }
         }
 
         function lockBtn(id) {
-            const b = document.getElementById(id);
-            if(b) { b.disabled = true; b.innerText = "COMPLETED"; }
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('completed');
+                btn.innerText = "Tamamlandı";
+            }
         }
 
-        // --- LİNK AÇMA FONKSİYONLARI ---
+        function doTask(url, taskId) {
+            startTime = Date.now();
+            activeTaskId = taskId;
+            tg.openLink(url);
+        }
 
         function joinGroup() {
-            // Telegram içi (Grup/Kanal) linklerini açmak için:
             tg.openTelegramLink('https://t.me/earnfreefaucetwin');
         }
 
-        function doTask(url, id) {
-            start = Date.now(); 
-            activeTask = id;
-            // Dış web sitesi linklerini dış tarayıcıda açmak için:
-            tg.openLink(url, { try_instant_view: false });
-        }
-
-        // --- GERİ DÖNÜŞ KONTROLÜ ---
+        // Kullanıcı sayfaya geri döndüğünde kontrol et
         window.onfocus = async () => {
-            if(activeTask) {
-                const diff = Math.floor((Date.now() - start) / 1000);
-                if(diff >= 15) {
-                    try {
+            if (activeTaskId) {
+                const diff = Math.floor((Date.now() - startTime) / 1000);
+                if (diff >= 15) {
+                    tg.showConfirm("Süre doldu, ödülünüz kontrol ediliyor...", async (confirmed) => {
                         const res = await fetch(`${WORKER_URL}/payout`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 
                                 address: localStorage.getItem('fp_user'),
-                                task_id: activeTask,
+                                task_id: activeTaskId,
                                 initData: tg.initData
                             })
                         });
                         const result = await res.json();
                         tg.showAlert(result.message);
-                        if(result.success) loadData(localStorage.getItem('fp_user'));
-                    } catch (e) { tg.showAlert("Error processing payout."); }
+                        if (result.success) {
+                            loadDashboard(localStorage.getItem('fp_user'));
+                        }
+                    });
                 } else {
-                    tg.showAlert("Wait " + (15 - diff) + " more seconds!");
+                    tg.showAlert(`Henüz ${diff} saniye geçti. Lütfen 15 saniye bekleyin!`);
                 }
-                activeTask = null;
+                activeTaskId = null;
             }
         };
     </script>
-
 </body>
 </html>
