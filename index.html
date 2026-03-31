@@ -1,149 +1,116 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Telegram WebApp Kütüphanesi -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f4f4f4; padding: 20px; text-align: center; margin: 0; color: #333; }
-        .card { background: white; padding: 20px; border-radius: 15px; border: 1px solid #ddd; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .stats { background: #0088cc; color: white; font-weight: bold; font-size: 18px; }
-        .task-btn { display: block; background: #0088cc; color: white !important; text-decoration: none; padding: 15px; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; border: none; width: 100%; font-size: 16px; }
-        .completed { background: #6c757d !important; pointer-events: none; opacity: 0.6; }
-        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
-        #setup, #main { display: none; }
-        h3, h4 { margin-top: 0; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 15px; text-align: center; }
+        .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button { background: #0088cc; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .completed { background: #6c757d !important; cursor: default; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <!-- Kayıt Ekranı -->
-    <div id="setup">
-        <div class="card">
-            <h3>Hoş Geldiniz</h3>
-            <p>Ödemeler için FaucetPay e-postanızı girin:</p>
-            <input type="email" id="fp_addr" placeholder="example@gmail.com">
-            <button class="task-btn" onclick="saveUser()">KAYDET VE BAŞLA</button>
-        </div>
-    </div>
-
-    <!-- Ana Panel -->
-    <div id="main">
-        <div class="card stats">
-            Bakiyeniz: <span id="total_earn">0</span> Satoshi LTC
-        </div>
-        
-        <div class="card">
-            <h4>Görev 1 (100 Satoshi)</h4>
-            <button id="btn_task1" class="task-btn" onclick="goToTask('https://blogspot.com', 'task1')">Görevi Başlat</button>
+    <div id="app-content">
+        <!-- Kayıt Ekranı -->
+        <div id="setup" style="display:none;">
+            <div class="card">
+                <h3>FaucetPay Email</h3>
+                <input type="email" id="email_input" placeholder="E-posta adresiniz">
+                <button onclick="handleSave()">KAYDET</button>
+            </div>
         </div>
 
-        <div class="card">
-            <h4>Görev 2 (120 Satoshi)</h4>
-            <button id="btn_task2" class="task-btn" onclick="goToTask('https://blogspot.com', 'task2')">Görevi Başlat</button>
+        <!-- Dashboard -->
+        <div id="main" style="display:none;">
+            <div class="card" style="background:#e3f2fd; color:#0d47a1;">
+                <b>Kazanç:</b> <span id="balance">0</span> Satoshi
+            </div>
+            <div class="card">
+                <h4>Görev 1</h4>
+                <button id="task1" onclick="openTask('https://blogspot.com', 'task1')">Görevi Başlat</button>
+            </div>
+            <div class="card">
+                <h4>Görev 2</h4>
+                <button id="task2" onclick="openTask('https://blogspot.com', 'task2')">Görevi Başlat</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Telegram WebApp Başlatma
         const tg = window.Telegram.WebApp;
-        const WORKER_URL = "https://workers.dev";
+        const api = "https://old-cherry-cabc.ahmtbke58.workers.dev/";
 
-        // Uygulama açıldığında çalışacak ana fonksiyon
-        function initApp() {
-            tg.ready();
-            tg.expand();
+        function show(id) {
+            document.getElementById('setup').style.display = (id === 'setup' ? 'block' : 'none');
+            document.getElementById('main').style.display = (id === 'main' ? 'block' : 'none');
+        }
 
-            const savedEmail = localStorage.getItem('fp_user');
-            // Telegram'dan gelen start parametresini al (?startapp=task1 gibi)
-            const finishedTask = tg.initDataUnsafe.start_param;
+        // Uygulama Başlatma
+        tg.ready();
+        tg.expand();
 
-            if (savedEmail) {
-                // Dashboard'u göster
-                document.getElementById('main').style.display = 'block';
-                
-                // Eğer bir görevden dönüş parametresi varsa ödemeyi işle
-                if (finishedTask) {
-                    processPayout(savedEmail, finishedTask);
-                } else {
-                    loadDashboard(savedEmail);
-                }
+        const email = localStorage.getItem('fp_user');
+        const startParam = tg.initDataUnsafe.start_param;
+
+        if (!email) {
+            show('setup');
+        } else {
+            show('main');
+            if (startParam) {
+                claim(email, startParam);
             } else {
-                // Kayıtlı değilse giriş ekranını göster
-                document.getElementById('setup').style.display = 'block';
+                fetchData();
             }
         }
 
-        function saveUser() {
-            const email = document.getElementById('fp_addr').value.trim();
-            if (email.includes('@')) {
-                localStorage.setItem('fp_user', email);
-                // Sayfayı yenileyerek initApp'in tekrar çalışmasını sağla
-                window.location.reload();
-            } else {
-                tg.showAlert("Geçerli bir e-posta adresi girin!");
+        function handleSave() {
+            const val = document.getElementById('email_input').value;
+            if (val.includes('@')) {
+                localStorage.setItem('fp_user', val);
+                location.reload();
             }
         }
 
-        async function processPayout(email, taskId) {
-            tg.showConfirm(taskId + " görevi için ödülünüzü almak istiyor musunuz?", async (ok) => {
+        async function claim(userEmail, task) {
+            tg.showConfirm(task + " tamamlandı mı?", async (ok) => {
                 if (ok) {
                     try {
-                        const response = await fetch(WORKER_URL + "/payout", {
+                        const r = await fetch(`${api}/payout`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                address: email, 
-                                task_id: taskId, 
-                                initData: tg.initData 
-                            })
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ address: userEmail, task_id: task, initData: tg.initData })
                         });
-                        const result = await response.json();
-                        tg.showAlert(result.message || "İşlem başarılı!");
-                        loadDashboard(email);
-                    } catch (e) {
-                        tg.showAlert("Hata: Ödeme sunucusuna ulaşılamadı.");
-                    }
-                } else {
-                    loadDashboard(email);
+                        const d = await r.json();
+                        tg.showAlert(d.message);
+                        fetchData();
+                    } catch (e) { tg.showAlert("Hata!"); }
                 }
             });
         }
 
-        async function loadDashboard(email) {
+        async function fetchData() {
             try {
-                const uid = tg.initDataUnsafe.user?.id || "test_user";
-                const response = await fetch(WORKER_URL + "/status?userId=" + uid);
-                const data = await response.json();
-                
-                document.getElementById('total_earn').innerText = data.totalToday || 0;
-                
-                // Görev butonlarını kilitleme
-                if(data.task1) lockBtn('btn_task1');
-                if(data.task2) lockBtn('btn_task2');
-            } catch (e) {
-                console.log("Veri çekme hatası.");
-            }
+                const uid = tg.initDataUnsafe.user?.id || "0";
+                const r = await fetch(`${api}/status?userId=${uid}`);
+                const d = await r.json();
+                document.getElementById('balance').innerText = d.totalToday || 0;
+                if (d.task1) lock('task1');
+                if (d.task2) lock('task2');
+            } catch (e) {}
         }
 
-        function lockBtn(id) {
-            const btn = document.getElementById(id);
-            if(btn) {
-                btn.classList.add('completed');
-                btn.innerText = "Tamamlandı";
-                btn.onclick = null;
-            }
+        function lock(id) {
+            const b = document.getElementById(id);
+            if(b) { b.classList.add('completed'); b.innerText = "Tamamlandı"; b.onclick = null; }
         }
 
-        function goToTask(url, taskId) {
-            // Blogspot'a giderken parametre ekle
-            const finalUrl = url + (url.indexOf('?') > -1 ? '&' : '?') + "source=tgbot&task=" + taskId;
-            tg.openLink(finalUrl);
+        function openTask(url, id) {
+            tg.openLink(`${url}?source=tgbot&task=${id}`);
         }
-
-        // Sayfa yüklendiğinde başlat
-        window.onload = initApp;
     </script>
 </body>
 </html>
