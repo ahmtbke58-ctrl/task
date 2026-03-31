@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 1. MOBİL KONSOL (ERUDA) - En üste ekliyoruz -->
+    <script src="https://jsdelivr.net"></script>
+    <script>eruda.init();</script>
     <!-- KRİTİK: Telegram SDK Linki -->
     <script src="https://telegram.org"></script>
     <title>Instantask Pay</title>
@@ -15,9 +18,7 @@
         input { width: 90%; padding: 12px; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 10px; font-size: 14px; outline: none; }
     </style>
     <script src="https://unpkg.com"></script>
-<script>
-  var vConsole = new window.VConsole();
-</script>
+
 </head>
 <body>
 
@@ -139,18 +140,6 @@
             }
         };
     </script>
-<script>
-    // Konsol çıktılarını ekrana yönlendir
-    (function(){
-        var log = document.getElementById('debug-log');
-        console.log = function(msg) {
-            log.innerHTML += "> " + msg + "<br>";
-        };
-        window.onerror = function(msg, url, line) {
-            log.innerHTML += "<span style='color:red;'>ERR: " + msg + " L:" + line + "</span><br>";
-        };
-    })();
-</script>
-    
+
 </body>
 </html>
