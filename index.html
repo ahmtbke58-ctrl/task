@@ -135,5 +135,18 @@
             }
         };
     </script>
+<script>
+    // Konsol çıktılarını ekrana yönlendir
+    (function(){
+        var log = document.getElementById('debug-log');
+        console.log = function(msg) {
+            log.innerHTML += "> " + msg + "<br>";
+        };
+        window.onerror = function(msg, url, line) {
+            log.innerHTML += "<span style='color:red;'>ERR: " + msg + " L:" + line + "</span><br>";
+        };
+    })();
+</script>
+    
 </body>
 </html>
