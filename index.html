@@ -73,13 +73,17 @@
     </div>
 
     <script>
-function goToTask(baseUrl, taskId) {
+function goToTask(url, taskId) {
+    const tg = window.Telegram.WebApp;
     const userId = tg.initDataUnsafe?.user?.id || "test_user";
-    // "source=tgbot" parametresini ekleyerek kimlik doğrulaması sağlıyoruz
-    const finalUrl = `${baseUrl}?uid=${userId}&task=${taskId}&source=tgbot`;
+    
+    // URL'de halihazırda parametre varsa (?) yoksa (&) eklemesi yapalım
+    const separator = url.includes('?') ? '&' : '?';
+    const finalUrl = `${url}${separator}uid=${userId}&task=${taskId}&source=tgbot`;
+    
+    console.log("Gidilen URL:", finalUrl); // Masaüstünde test ediyorsanız konsoldan bakın
     tg.openLink(finalUrl);
 }
-
         
         const tg = window.Telegram.WebApp;
         tg.ready();
