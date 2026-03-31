@@ -73,6 +73,14 @@
     </div>
 
     <script>
+function goToTask(baseUrl, taskId) {
+    const userId = tg.initDataUnsafe?.user?.id || "test_user";
+    // "source=tgbot" parametresini ekleyerek kimlik doğrulaması sağlıyoruz
+    const finalUrl = `${baseUrl}?uid=${userId}&task=${taskId}&source=tgbot`;
+    tg.openLink(finalUrl);
+}
+
+        
         const tg = window.Telegram.WebApp;
         tg.ready();
 
