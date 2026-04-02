@@ -23,7 +23,78 @@
             <a href="javascript:void(0)" class="external-link" onclick="saveUser()">[ KAYDET VE GİRİŞ YAP ]</a>
         </div>
     </div>
+<h1>Litecoin Faucet</h1>
+    <p>Ödül almak için önce reklamı izleyin.</p>
 
+    <!-- 1. ADIM: Reklam Butonu -->
+    <button id="adBtn" class="btn btn-ad" onclick="startAd()">Reklamı Aç ve Süreyi Başlat</button>
+
+    <!-- 2. ADIM: Sayaç -->
+    <div id="timer" style="display:none;">Kalan Süre: <span id="seconds">15</span>s</div>
+
+    <!-- 3. ADIM: Ödeme Butonu -->
+    <button id="claimBtn" class="btn btn-claim" onclick="payout()">✅ Ödülü Cüzdana Gönder</button>
+
+    <div id="status"></div>
+
+    <script>
+        // --- AYARLAR ---
+        const WORKER_URL = "https://workers.dev"; // Cloudflare Worker URL'niz
+        const AD_URL = "https://4armn.com[SITE_ID]";
+        
+        // URL'den Telegram verilerini al (Örn: sayfa.html?userId=123&address=LTC_ADRESI)
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('userId');
+        const address = urlParams.get('address');
+
+        function startAd() {
+            // Reklamı yeni sekmede aç
+            window.open(AD_URL, '_blank');
+            
+            document.getElementById('adBtn').style.display = 'none';
+            document.getElementById('timer').style.display = 'block';
+            
+            let timeLeft = 15;
+            const countdown = setInterval(() => {
+                timeLeft--;
+                document.getElementById('seconds').innerText = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    document.getElementById('timer').style.display = 'none';
+                    document.getElementById('claimBtn').style.display = 'inline-block';
+                }
+            }, 1000);
+        }
+
+        async function payout() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerText = "Ödeme işleniyor...";
+
+            try {
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        address: address,
+                        task_id: "LTC_CLAIM_" + Date.now()
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.innerHTML = `<b style="color:green">${result.message}</b><br>Telegram'a dönebilirsiniz.`;
+                    document.getElementById('claimBtn').disabled = true;
+                } else {
+                    statusDiv.innerHTML = `<b style="color:red">Hata: ${result.message}</b>`;
+                }
+            } catch (error) {
+                statusDiv.innerText = "Bağlantı hatası oluştu!";
+            }
+        }
+    </script>
     <div id="main" style="display:none;">
         <div class="card stats">
             Günlük Kazanç: <span id="total_earn">0</span> Satoshi LTC
